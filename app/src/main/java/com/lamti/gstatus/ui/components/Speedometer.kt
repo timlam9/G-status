@@ -11,10 +11,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.vector.DefaultStrokeLineMiter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.AnnotatedString
@@ -35,7 +37,7 @@ private val values = listOf(0, 5, 10, 50, 100, 250, 500, 750, 1000)
 
 @OptIn(ExperimentalTextApi::class)
 @Composable
-fun Speedometer(modifier: Modifier = Modifier) {
+fun Speedometer(modifier: Modifier = Modifier, currentValue: Float = -120f) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
 
@@ -125,6 +127,54 @@ fun Speedometer(modifier: Modifier = Modifier) {
                     textValuesIndex++
                 }
             }
+
+            // Draw indicator
+            drawCircle(
+                center = center,
+                radius = 40f,
+                color = Color.LightGray,
+            )
+            val middleTopLeft = Offset(
+                x = center.x - 3f,
+                y = center.y - 230f
+            )
+            val middleTopRight = Offset(
+                x = center.x + 3f,
+                y = center.y - 230f
+            )
+            val bottomLeft = Offset(
+                x = center.x - 20f,
+                y = center.y
+            )
+            val bottomRight = Offset(
+                x = center.x + 20f,
+                y = center.y
+            )
+            val indicatorPath = Path().apply {
+                moveTo(middleTopLeft.x, middleTopLeft.y)
+                lineTo(bottomLeft.x, bottomLeft.y)
+                lineTo(bottomRight.x, bottomRight.y)
+                lineTo(middleTopRight.x, middleTopRight.y)
+            }
+            rotate(
+                degrees = currentValue,
+                pivot = center
+            ) {
+                drawPath(
+                    path = indicatorPath,
+                    color = Color.Blue,
+                )
+            }
+            drawCircle(
+                center = center,
+                radius = 20f,
+                color = Color.Blue,
+            )
+            drawCircle(
+                center = center,
+                radius = 8f,
+                color = Color.White,
+            )
         }
     }
 }
