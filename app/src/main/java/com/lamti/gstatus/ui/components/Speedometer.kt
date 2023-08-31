@@ -7,6 +7,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -28,6 +33,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lamti.gstatus.ui.converters.toArcValue
+import com.lamti.gstatus.ui.converters.toIndicatorValue
 import com.lamti.gstatus.ui.theme.GStatusTheme
 import kotlin.math.PI
 import kotlin.math.cos
@@ -37,9 +44,16 @@ private val values = listOf(0, 5, 10, 50, 100, 250, 500, 750, 1000)
 
 @OptIn(ExperimentalTextApi::class)
 @Composable
-fun Speedometer(modifier: Modifier = Modifier, currentValue: Float = -120f) {
+fun Speedometer(modifier: Modifier = Modifier, value: Float = 0f) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
+    var indicatorValue by remember { mutableStateOf(value.toIndicatorValue()) }
+    var arcValue by remember { mutableStateOf(value.toArcValue()) }
+
+    LaunchedEffect(key1 = value ) {
+        indicatorValue = value.toIndicatorValue()
+        arcValue = value.toArcValue()
+    }
 
     Box(
         modifier = modifier
@@ -157,7 +171,7 @@ fun Speedometer(modifier: Modifier = Modifier, currentValue: Float = -120f) {
                 lineTo(middleTopRight.x, middleTopRight.y)
             }
             rotate(
-                degrees = currentValue,
+                degrees = indicatorValue,
                 pivot = center
             ) {
                 drawPath(
@@ -174,6 +188,25 @@ fun Speedometer(modifier: Modifier = Modifier, currentValue: Float = -120f) {
                 center = center,
                 radius = 8f,
                 color = Color.White,
+            )
+
+            // Draw value arc
+            drawArc(
+                color = Color.Blue,
+                topLeft = Offset.Zero,
+                startAngle = -208f,
+                sweepAngle = arcValue,
+                useCenter = false,
+                size = Size(canvasWidth, canvasWidth),
+                style = Stroke(
+                    width = 33f,
+                    miter = DefaultStrokeLineMiter,
+                    cap = StrokeCap.Round,
+                    join = StrokeJoin.Round,
+                    pathEffect = null
+                ),
+                colorFilter = null,
+                blendMode = DrawScope.DefaultBlendMode
             )
         }
     }
