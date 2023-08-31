@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.vector.DefaultStrokeLineMiter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.AnnotatedString
@@ -104,29 +103,25 @@ fun Speedometer(modifier: Modifier = Modifier) {
 
                 // Draw text
                 if (lineHeight == 60f) {
-                    val textPoint = Offset(
-                        x = center.x + (radius - lineSpace - lineHeight) * cos(angle),
-                        y = center.y + (radius - lineSpace - lineHeight) * sin(angle)
+                    val measuredText = textMeasurer.measure(
+                        text = AnnotatedString(text = values[textValuesIndex].toString()),
+                        style = TextStyle(fontSize = 18.sp, textAlign = TextAlign.Center, color = Color.LightGray)
+                    )
+                    val measuredTextCenterX = measuredText.size.width / 2 - 75
+                    val measuredTextCenterY = measuredText.size.height / 2
+
+                    val textPointCenter = Offset(
+                        x = (center.x + measuredTextCenterX) +
+                                (radius - lineSpace - lineHeight - lineHeight / 2 + measuredTextCenterX) * cos(angle),
+                        y = (center.y - measuredTextCenterY) +
+                                (radius - lineSpace - lineHeight - lineHeight / 2 - measuredTextCenterY) * sin(angle)
                     )
 
-                    rotate(
-                        degrees = i.toFloat() + 90f,
-                        pivot = textPoint
-                    ) {
-                        val measuredText = textMeasurer.measure(
-                            text = AnnotatedString(text = values[textValuesIndex].toString()),
-                            style = TextStyle(fontSize = 18.sp, textAlign = TextAlign.Center, color = Color.LightGray)
-                        )
-                        val textPointCenter = Offset(
-                            x = (center.x - measuredText.size.width / 2) + (radius - lineSpace - lineHeight) * cos(angle),
-                            y = (center.y + 10f) + (radius - lineSpace - lineHeight) * sin(angle)
-                        )
+                    drawText(
+                        textLayoutResult = measuredText,
+                        topLeft = textPointCenter
+                    )
 
-                        drawText(
-                            textLayoutResult = measuredText,
-                            topLeft = textPointCenter
-                        )
-                    }
                     textValuesIndex++
                 }
             }
