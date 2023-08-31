@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -16,7 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.lamti.gstatus.ui.components.Speedometer
-import com.lamti.gstatus.ui.components.StepsRangeSlider
+import com.lamti.gstatus.ui.components.RangeSlider
+import com.lamti.gstatus.ui.converters.toSpeedometerValue
 import com.lamti.gstatus.ui.theme.GStatusTheme
 
 class MainActivity : ComponentActivity() {
@@ -35,13 +37,14 @@ class MainActivity : ComponentActivity() {
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Speedometer(value = speedometerValue)
-                        StepsRangeSlider(
+                        RangeSlider(
                             modifier = Modifier.padding(20.dp),
                             onValueChange = {
-                                speedometerValue = it
+                                speedometerValue = it.toSpeedometerValue()
                             },
                             onValueChangeFinished = {}
                         )
+                        Text(text = "$speedometerValue UI units", style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }

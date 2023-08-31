@@ -12,13 +12,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 
 @Composable
-fun StepsRangeSlider(
+fun RangeSlider(
     modifier: Modifier = Modifier,
     onValueChange: (Float) -> Unit,
     onValueChangeFinished: () -> Unit,
 ) {
     var sliderPosition by remember { mutableStateOf(0f) }
-    Text(text = sliderPosition.toString(), style = MaterialTheme.typography.labelLarge)
+    Text(text = "$sliderPosition kbps", style = MaterialTheme.typography.labelLarge)
     Slider(
         modifier = modifier,
         value = sliderPosition,
@@ -26,7 +26,6 @@ fun StepsRangeSlider(
             onValueChange(it)
             sliderPosition = it
         },
-        steps = 9,
         valueRange = 0f..1000f,
         onValueChangeFinished = onValueChangeFinished,
         colors = SliderDefaults.colors(
