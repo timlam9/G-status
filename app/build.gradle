@@ -4,6 +4,11 @@ plugins {
 }
 
 android {
+    packagingOptions {
+        pickFirst 'META-INF/LICENSE.md'
+        pickFirst 'META-INF/NOTICE.md'
+    }
+
     namespace 'com.lamti.gstatus'
     compileSdk 33
 
@@ -64,4 +69,6 @@ dependencies {
     androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
     debugImplementation 'androidx.compose.ui:ui-tooling'
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
+
+    implementation 'com.speedchecker:android-sdk:4.2.216-demo'
 }

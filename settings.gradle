@@ -10,6 +10,15 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        jcenter()
+        maven { url "https://jitpack.io" }
+        maven {
+            url 'https://maven.speedcheckerapi.com/artifactory/libs-demo'
+            credentials {
+                username = "demo"
+                password = "AP85qiz6wYEsCttWU2ZckEWSwJKuA6mSYcizEY"
+            }
+        }
     }
 }
 rootProject.name = "G Status"
