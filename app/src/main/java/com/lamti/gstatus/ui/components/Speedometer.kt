@@ -16,12 +16,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.DefaultStrokeLineMiter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.AnnotatedString
@@ -50,7 +54,7 @@ fun Speedometer(modifier: Modifier = Modifier, value: Float = 0f) {
     var indicatorValue by remember { mutableStateOf(value.toIndicatorValue()) }
     var arcValue by remember { mutableStateOf(value.toArcValue()) }
 
-    LaunchedEffect(key1 = value ) {
+    LaunchedEffect(key1 = value) {
         indicatorValue = value.toIndicatorValue()
         arcValue = value.toArcValue()
     }
@@ -63,6 +67,29 @@ fun Speedometer(modifier: Modifier = Modifier, value: Float = 0f) {
     ) {
         val textMeasurer = rememberTextMeasurer()
 
+        // Paint for the shadow
+        val paint = remember {
+            Paint().apply {
+                style = PaintingStyle.Stroke
+                strokeWidth = 50f
+            }
+        }
+        val frameworkPaint = remember { paint.asFrameworkPaint() }
+        val color = Color.Blue
+        val transparent = color
+            .copy(alpha = 0f)
+            .toArgb()
+
+        frameworkPaint.color = transparent
+        frameworkPaint.setShadowLayer(
+            50f,
+            0f,
+            0f,
+            color
+                .copy(alpha = .5f)
+                .toArgb()
+        )
+
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
@@ -72,6 +99,7 @@ fun Speedometer(modifier: Modifier = Modifier, value: Float = 0f) {
             val center = Offset(canvasWidth / 2f, canvasHeight / 2f)
             var textValuesIndex = 0
 
+            // Draw main arc
             drawArc(
                 color = Color.LightGray,
                 topLeft = Offset.Zero,
@@ -189,6 +217,20 @@ fun Speedometer(modifier: Modifier = Modifier, value: Float = 0f) {
                 radius = 8f,
                 color = Color.White,
             )
+
+            // Draw value arc shadow-glow
+            this.drawIntoCanvas {
+                it.drawArc(
+                    0f,
+                    0f,
+                    canvasWidth,
+                    canvasWidth,
+                    -208f,
+                    arcValue,
+                    false,
+                    paint
+                )
+            }
 
             // Draw value arc
             drawArc(
