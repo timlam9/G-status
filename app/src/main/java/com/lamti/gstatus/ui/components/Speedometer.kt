@@ -1,5 +1,9 @@
 package com.lamti.gstatus.ui.components
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +29,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.DefaultStrokeLineMiter
 import androidx.compose.ui.platform.LocalConfiguration
@@ -54,9 +59,60 @@ fun Speedometer(modifier: Modifier = Modifier, value: Float = 0f) {
     var indicatorValue by remember { mutableStateOf(value.toIndicatorValue()) }
     var arcValue by remember { mutableStateOf(value.toArcValue()) }
 
+    val mainArcAnimation = remember {
+        Animatable(0f)
+    }
+
+    LaunchedEffect(Unit) {
+        mainArcAnimation.animateTo(
+            targetValue = 238f,
+            animationSpec = tween(
+                durationMillis = 350,
+                delayMillis = 150,
+                easing = FastOutSlowInEasing
+            ),
+        )
+    }
+
+    val textLinesAnimation = remember {
+        List(values.size) {
+            Animatable(0f)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        var delay = 0
+        textLinesAnimation.forEach {
+            it.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(
+                    durationMillis = 20,
+                    delayMillis = delay,
+                    easing = FastOutLinearInEasing
+                ),
+            )
+            delay += 3
+        }
+    }
+
     LaunchedEffect(key1 = value) {
         indicatorValue = value.toIndicatorValue()
         arcValue = value.toArcValue()
+    }
+
+    val indicatorAnimation = remember {
+        Animatable(0f)
+    }
+
+    LaunchedEffect(Unit) {
+        indicatorAnimation.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(
+                durationMillis = 220,
+                delayMillis = 750,
+                easing = FastOutSlowInEasing
+            )
+        )
     }
 
     Box(
@@ -104,7 +160,7 @@ fun Speedometer(modifier: Modifier = Modifier, value: Float = 0f) {
                 color = Color.LightGray,
                 topLeft = Offset.Zero,
                 startAngle = -208f,
-                sweepAngle = 238f,
+                sweepAngle = mainArcAnimation.value,
                 useCenter = false,
                 size = Size(canvasWidth, canvasWidth),
                 style = Stroke(
@@ -161,62 +217,66 @@ fun Speedometer(modifier: Modifier = Modifier, value: Float = 0f) {
                                 (radius - lineSpace - lineHeight - lineHeight / 2 - measuredTextCenterY) * sin(angle)
                     )
 
-                    drawText(
-                        textLayoutResult = measuredText,
-                        topLeft = textPointCenter
-                    )
+                    scale(scale = textLinesAnimation[textValuesIndex].value) {
+                        drawText(
+                            textLayoutResult = measuredText,
+                            topLeft = textPointCenter
+                        )
+                    }
 
                     textValuesIndex++
                 }
             }
 
             // Draw indicator
-            drawCircle(
-                center = center,
-                radius = 40f,
-                color = Color.LightGray,
-            )
-            val middleTopLeft = Offset(
-                x = center.x - 3f,
-                y = center.y - 230f
-            )
-            val middleTopRight = Offset(
-                x = center.x + 3f,
-                y = center.y - 230f
-            )
-            val bottomLeft = Offset(
-                x = center.x - 20f,
-                y = center.y
-            )
-            val bottomRight = Offset(
-                x = center.x + 20f,
-                y = center.y
-            )
-            val indicatorPath = Path().apply {
-                moveTo(middleTopLeft.x, middleTopLeft.y)
-                lineTo(bottomLeft.x, bottomLeft.y)
-                lineTo(bottomRight.x, bottomRight.y)
-                lineTo(middleTopRight.x, middleTopRight.y)
-            }
-            rotate(
-                degrees = indicatorValue,
-                pivot = center
-            ) {
-                drawPath(
-                    path = indicatorPath,
+            scale(scale = indicatorAnimation.value) {
+                drawCircle(
+                    center = center,
+                    radius = 40f,
+                    color = Color.LightGray,
+                )
+                val middleTopLeft = Offset(
+                    x = center.x - 3f,
+                    y = center.y - 230f
+                )
+                val middleTopRight = Offset(
+                    x = center.x + 3f,
+                    y = center.y - 230f
+                )
+                val bottomLeft = Offset(
+                    x = center.x - 20f,
+                    y = center.y
+                )
+                val bottomRight = Offset(
+                    x = center.x + 20f,
+                    y = center.y
+                )
+                val indicatorPath = Path().apply {
+                    moveTo(middleTopLeft.x, middleTopLeft.y)
+                    lineTo(bottomLeft.x, bottomLeft.y)
+                    lineTo(bottomRight.x, bottomRight.y)
+                    lineTo(middleTopRight.x, middleTopRight.y)
+                }
+                rotate(
+                    degrees = indicatorValue,
+                    pivot = center
+                ) {
+                    drawPath(
+                        path = indicatorPath,
+                        color = Color.Blue,
+                    )
+                }
+                drawCircle(
+                    center = center,
+                    radius = 20f,
                     color = Color.Blue,
                 )
+                drawCircle(
+                    center = center,
+                    radius = 8f,
+                    color = Color.White,
+                )
             }
-            drawCircle(
-                center = center,
-                radius = 20f,
-                color = Color.Blue,
-            )
-            drawCircle(
-                center = center,
-                radius = 8f,
-                color = Color.White,
-            )
 
             // Draw value arc shadow-glow
             this.drawIntoCanvas {
