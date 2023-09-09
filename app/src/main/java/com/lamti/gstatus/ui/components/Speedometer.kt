@@ -207,7 +207,7 @@ fun Speedometer(modifier: Modifier = Modifier, value: Float = 0f) {
                         text = AnnotatedString(text = values[textValuesIndex].toString()),
                         style = TextStyle(fontSize = 18.sp, textAlign = TextAlign.Center, color = Color.LightGray)
                     )
-                    val measuredTextCenterX = measuredText.size.width / 2 - 75
+                    val measuredTextCenterX = measuredText.size.width / 2 - 80
                     val measuredTextCenterY = measuredText.size.height / 2
 
                     val textPointCenter = Offset(

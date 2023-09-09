@@ -1,6 +1,9 @@
 package com.lamti.gstatus
 
 import android.content.Context
+import android.util.Log
+import com.lamti.gstatus.models.InternetSpeed
+import com.lamti.gstatus.models.SpeedTest
 import com.speedchecker.android.sdk.Public.SpeedTestListener
 import com.speedchecker.android.sdk.Public.SpeedTestResult
 import com.speedchecker.android.sdk.SpeedcheckerSDK
@@ -9,10 +12,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class SpeedTester(private val context: Context): SpeedTestListener {
+class SpeedTester(private val context: Context) : SpeedTestListener {
 
-    private var _downloadSpeed = MutableStateFlow(0f)
-    val downloadSpeed: StateFlow<Float> = _downloadSpeed.asStateFlow()
+    private var _speedTest = MutableStateFlow(SpeedTest())
+    val speedTest: StateFlow<SpeedTest> = _speedTest.asStateFlow()
 
     init {
         SpeedcheckerSDK.init(context)
@@ -24,64 +27,94 @@ class SpeedTester(private val context: Context): SpeedTestListener {
     }
 
     override fun onTestStarted() {
-        TODO("Not yet implemented")
+        Log.d("SPEED_TEST", "Test started")
+        _speedTest.update { it.copy(isTestRunning = true) }
     }
 
-    override fun onFetchServerFailed(p0: Int?) {
-        TODO("Not yet implemented")
+    override fun onFetchServerFailed(errorCode: Int) {
+        Log.d("SPEED_TEST", "Fetch server failed")
     }
 
     override fun onFindingBestServerStarted() {
-        TODO("Not yet implemented")
+        Log.d("SPEED_TEST", "Finding best server started")
     }
 
-    override fun onTestFinished(p0: SpeedTestResult?) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onPingStarted() {
-        TODO("Not yet implemented")
-    }
-
-    override fun onPingFinished(p0: Int, p1: Int) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onDownloadTestStarted() {
-        TODO("Not yet implemented")
-    }
-
-    override fun onDownloadTestProgress(progress: Int, speedMbs: Double, transferredMb: Double) {
-        _downloadSpeed.update {
-            speedMbs.toFloat()
+    override fun onTestFinished(speedTestResult: SpeedTestResult) {
+        Log.d("SPEED_TEST", "Test finished")
+        _speedTest.update {
+            it.copy(
+                isTestRunning = false,
+                isPingStarted = false,
+                isDownloadStarted = false,
+                isUploadStarted = false,
+            )
         }
     }
 
-    override fun onDownloadTestFinished(p0: Double) {
-        TODO("Not yet implemented")
+    override fun onPingStarted() {
+        Log.d("SPEED_TEST", "Ping started")
+        _speedTest.update { it.copy(isPingStarted = true) }
+    }
+
+    override fun onPingFinished(ping: Int, jitter: Int) {
+        Log.d("SPEED_TEST", "Ping finished with ping: $ping, jitter: $jitter")
+        _speedTest.update { it.copy(isPingStarted = false) }
+    }
+
+    override fun onDownloadTestStarted() {
+        Log.d("SPEED_TEST", "Download test started")
+        _speedTest.update { it.copy(isDownloadStarted = true) }
+    }
+
+    override fun onDownloadTestProgress(progress: Int, speedMbs: Double, transferredMb: Double) {
+        _speedTest.update {
+            it.copy(
+                downloadSpeed = InternetSpeed(
+                    value = speedMbs.toFloat(),
+                    progress = progress
+                ),
+            )
+        }
+    }
+
+    override fun onDownloadTestFinished(value: Double) {
+        Log.d("SPEED_TEST", "Download test finished")
+        _speedTest.update {
+            it.copy(
+                isDownloadStarted = false
+            )
+        }
     }
 
     override fun onUploadTestStarted() {
-        TODO("Not yet implemented")
+        Log.d("SPEED_TEST", "Upload test started")
+        _speedTest.update { it.copy(isUploadStarted = true) }
     }
 
-    override fun onUploadTestProgress(p0: Int, p1: Double, p2: Double) {
-        TODO("Not yet implemented")
+    override fun onUploadTestProgress(progress: Int, speedMbs: Double, transferredMb: Double) {
+        _speedTest.update {
+            it.copy(
+                uploadSpeed = InternetSpeed(
+                    value = speedMbs.toFloat(),
+                    progress = progress
+                ),
+            )
+        }
     }
 
-    override fun onUploadTestFinished(p0: Double) {
-        TODO("Not yet implemented")
+    override fun onUploadTestFinished(value: Double) {
+        Log.d("SPEED_TEST", "Upload test finished with value: $value")
     }
 
-    override fun onTestWarning(p0: String?) {
-        TODO("Not yet implemented")
+    override fun onTestWarning(warning: String?) {
+        Log.d("SPEED_TEST", "Test warning: $warning")
     }
 
-    override fun onTestFatalError(p0: String?) {
-        TODO("Not yet implemented")
+    override fun onTestFatalError(error: String?) {
+        Log.d("SPEED_TEST", "Test fatal error: $error")
     }
 
-    override fun onTestInterrupted(p0: String?) {
-        TODO("Not yet implemented")
+    override fun onTestInterrupted(reason: String?) {
+        Log.d("SPEED_TEST", "Test interrupted: $reason")
     }
 }
