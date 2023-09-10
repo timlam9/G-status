@@ -12,17 +12,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class SpeedTester(private val context: Context) : SpeedTestListener {
+class SpeedTester : SpeedTestListener {
 
     private var _speedTest = MutableStateFlow(SpeedTest())
     val speedTest: StateFlow<SpeedTest> = _speedTest.asStateFlow()
 
-    init {
+    fun initialize(context: Context) {
         SpeedcheckerSDK.init(context)
         SpeedcheckerSDK.SpeedTest.setOnSpeedTestListener(this)
     }
 
-    fun startTest() {
+    fun startTest(context: Context) {
         SpeedcheckerSDK.SpeedTest.startTest(context)
     }
 
