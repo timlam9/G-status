@@ -1,5 +1,6 @@
 package com.lamti.gstatus.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.lamti.gstatus.models.InternetSpeed
 import com.lamti.gstatus.models.SpeedTest
+import com.lamti.gstatus.models.TestStatus
 import com.lamti.gstatus.ui.components.InfoCard
 import com.lamti.gstatus.ui.components.SpeedCard
 import com.lamti.gstatus.ui.components.Speedometer
@@ -33,15 +36,21 @@ import com.lamti.gstatus.ui.converters.toSpeedometerValue
 import com.lamti.gstatus.ui.theme.GStatusTheme
 
 @Composable
-fun SpeedometerScreen(speedTest: SpeedTest) {
+fun SpeedometerScreen(speedTest: SpeedTest, onRestartClick: () -> Unit = {}) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val speedValueOffset = -(screenWidth / 3)
 
     var speedometerValue by remember { mutableStateOf(0f) }
+    var displayedSpeed by remember { mutableStateOf(0f) }
 
     LaunchedEffect(key1 = speedTest.downloadSpeed, key2 = speedTest.uploadSpeed) {
-        speedometerValue = speedTest.downloadSpeed.value.toSpeedometerValue()
+        displayedSpeed = if (speedTest.uploadSpeed.progress > 0) {
+            speedTest.uploadSpeed.value
+        } else {
+            speedTest.downloadSpeed.value
+        }
+        speedometerValue = displayedSpeed.toSpeedometerValue()
     }
 
     Column(
@@ -77,18 +86,23 @@ fun SpeedometerScreen(speedTest: SpeedTest) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            InfoCard("10")
+            InfoCard(speedTest.ping.toString())
             InfoCard("20")
             InfoCard("30")
-            InfoCard("40")
+            InfoCard(speedTest.jitter.toString())
         }
         Spacer(modifier = Modifier.height((screenWidth / 3) - screenWidth / 8))
         Speedometer(value = speedometerValue)
         Text(
-            text = "${speedTest.downloadSpeed.value} Mbps",
+            text = "$displayedSpeed Mbps",
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.offset(y = speedValueOffset),
         )
+        AnimatedVisibility(visible = speedTest.status == TestStatus.FINISHED) {
+            Button(onClick = onRestartClick) {
+                Text(text = "Restart")
+            }
+        }
     }
 }
 
@@ -110,7 +124,7 @@ fun SpeedometerScreenPreview() {
                     isPingStarted = true,
                     isDownloadStarted = false,
                     isUploadStarted = true,
-                    isTestRunning = true
+                    status = TestStatus.RUNNING
                 )
             )
         }

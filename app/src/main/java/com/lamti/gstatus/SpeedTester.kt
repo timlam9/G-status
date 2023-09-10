@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.lamti.gstatus.models.InternetSpeed
 import com.lamti.gstatus.models.SpeedTest
+import com.lamti.gstatus.models.TestStatus
 import com.speedchecker.android.sdk.Public.SpeedTestListener
 import com.speedchecker.android.sdk.Public.SpeedTestResult
 import com.speedchecker.android.sdk.SpeedcheckerSDK
@@ -23,12 +24,25 @@ class SpeedTester : SpeedTestListener {
     }
 
     fun startTest(context: Context) {
+        // Reset state
+        _speedTest.update {
+            it.copy(
+                downloadSpeed = InternetSpeed(),
+                uploadSpeed = InternetSpeed(),
+                ping = 0,
+                jitter = 0,
+                isPingStarted = false,
+                isDownloadStarted = false,
+                isUploadStarted = false,
+                status = TestStatus.NOT_STARTED,
+            )
+        }
         SpeedcheckerSDK.SpeedTest.startTest(context)
     }
 
     override fun onTestStarted() {
         Log.d("SPEED_TEST", "Test started")
-        _speedTest.update { it.copy(isTestRunning = true) }
+        _speedTest.update { it.copy(status = TestStatus.RUNNING) }
     }
 
     override fun onFetchServerFailed(errorCode: Int) {
@@ -43,7 +57,7 @@ class SpeedTester : SpeedTestListener {
         Log.d("SPEED_TEST", "Test finished")
         _speedTest.update {
             it.copy(
-                isTestRunning = false,
+                status = TestStatus.FINISHED,
                 isPingStarted = false,
                 isDownloadStarted = false,
                 isUploadStarted = false,
@@ -58,7 +72,13 @@ class SpeedTester : SpeedTestListener {
 
     override fun onPingFinished(ping: Int, jitter: Int) {
         Log.d("SPEED_TEST", "Ping finished with ping: $ping, jitter: $jitter")
-        _speedTest.update { it.copy(isPingStarted = false) }
+        _speedTest.update {
+            it.copy(
+                ping = ping,
+                jitter = jitter,
+                isPingStarted = false,
+            )
+        }
     }
 
     override fun onDownloadTestStarted() {
